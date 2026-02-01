@@ -40,7 +40,7 @@ RECOGNITION_THRESHOLD = 0.60 # Lower = stricter
 COOLDOWN_SECONDS =  60    # 1 Minutes buffer for test you can put accordingly
 
 # CSV Columns (Attendance Log Schema)
-CSV_COLUMNS = ['Name', 'Date', 'Punch In', 'Punch Out']
+CSV_COLUMNS = ['Name', 'Date', 'Punch In Time', 'Punch Out Time']
 
 # Table Configuration (for UI display)
 TABLE_CONFIG = {
