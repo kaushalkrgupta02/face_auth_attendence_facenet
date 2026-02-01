@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-HASH_ALGORITHM = os.getenv('HASH_ALGORITHM')
+HASH_ALGORITHM = os.getenv('HASH_ALGORITHM', 'sha256')
 
 def hash_name(name):
     """

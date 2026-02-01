@@ -26,3 +26,48 @@ RECOGNITION_THRESHOLD = 0.60 # Lower = stricter
 
 # Attendance Logic
 COOLDOWN_SECONDS = 300      # 5 Minutes buffer
+
+# CSV Columns (Attendance Log Schema)
+CSV_COLUMNS = ['Name', 'Date', 'Punch In Time', 'Punch Out Time']
+
+# Table Configuration (for UI display)
+TABLE_CONFIG = {
+    "columns": [
+        {
+            "field": "Name",
+            "title": "Name",
+            "minWidth": 40,
+            "resizable": True,
+            "sorter": "string",
+            "headerSort": True,
+            "width": 93
+        },
+        {
+            "field": "Date",
+            "title": "Date",
+            "minWidth": 40,
+            "resizable": True,
+            "sorter": "string",
+            "headerSort": True,
+            "width": 120
+        },
+        {
+            "field": "Punch In Time",
+            "title": "Punch In Time",
+            "minWidth": 40,
+            "resizable": True,
+            "sorter": "string",
+            "headerSort": True,
+            "width": 140
+        },
+        {
+            "field": "Punch Out Time",
+            "title": "Punch Out Time",
+            "minWidth": 40,
+            "resizable": True,
+            "sorter": "string",
+            "headerSort": True,
+            "width": 140
+        }
+    ]
+}

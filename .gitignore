@@ -4,6 +4,8 @@
 __pycache__/
 *data
 */data/
+src/__pycache__/
+
 
 attendance_log.csv
 face_db.pt
