@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import datetime, timedelta
 import os
-from .config import LOG_PATH, COOLDOWN_SECONDS
+from core.config import LOG_PATH, COOLDOWN_SECONDS
 
 class AttendanceManager:
     def __init__(self):

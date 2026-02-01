@@ -7,10 +7,14 @@ import cv2
 import argparse
 import time
 from datetime import datetime  
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+
 from src.detector import FaceDetector
 from src.recognizer import FaceRecognizer
 from src.attendance import AttendanceManager
-from src.config import FRAME_WIDTH, FRAME_HEIGHT
+from core.config import FRAME_WIDTH, FRAME_HEIGHT
 
 def main():
     parser = argparse.ArgumentParser()
@@ -22,6 +26,18 @@ def main():
     detector = FaceDetector()
     recognizer = FaceRecognizer()
     manager = AttendanceManager()
+
+    # CHECK IF REGISTERING - VALIDATE NAME BEFORE STARTING
+    if args.mode == 'register':
+        if not args.name:
+            print("Error: You must provide --name for registration.")
+            return
+        
+        # CHECK IF NAME ALREADY EXISTS - THROW ERROR BEFORE STARTING CAMERA
+        if recognizer.check_name_exists(args.name):
+            print(f"\n[ERROR] User '{args.name}' is already registered!")
+            print("[HINT] Please use a different name to register.\n")
+            return
 
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
@@ -52,6 +68,7 @@ def main():
                 if valid_intent:
                     color = (0, 255, 255) # Yellow (Processing)
                     
+
                     # --- MODE: REGISTER ---
                     if args.mode == 'register':
                         cv2.putText(frame, "Press 'S' to Capture (5 Samples)", (10, 30), 
@@ -59,10 +76,6 @@ def main():
                         
                         # Trigger Capture
                         if cv2.waitKey(1) & 0xFF == ord('s'):
-                            if not args.name:
-                                print("Error: You must provide --name for registration.")
-                                return
-
                             print(f"Starting capture for {args.name}...")
                             samples = []
                             sample_count = 0
@@ -92,7 +105,11 @@ def main():
                             if recognizer.register_face(args.name, samples):
                                 print(f"User {args.name} Registered Successfully!")
                                 return 
-
+                            else:
+                                print(f"Registration failed for {args.name}")
+                                return
+                            
+                            
                     # --- MODE: RUN (Attendance) ---
                     elif args.mode == 'run':
                         emb = recognizer.get_embedding(frame, face_data)

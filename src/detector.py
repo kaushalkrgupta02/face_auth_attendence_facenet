@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 from retinaface import RetinaFace
-from .config import RETINA_CONFIDENCE, MIN_FACE_WIDTH, ROI_CENTER_PCT, GAZE_THRESHOLD_LOW, GAZE_THRESHOLD_HIGH
-
+from core.config import RETINA_CONFIDENCE, MIN_FACE_WIDTH, ROI_CENTER_PCT, GAZE_THRESHOLD_LOW, GAZE_THRESHOLD_HIGH
 class FaceDetector:
     def detect(self, frame):
         """

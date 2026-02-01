@@ -4,7 +4,8 @@ import numpy as np
 import cv2
 import os
 from facenet_pytorch import InceptionResnetV1
-from .config import DB_PATH, RECOGNITION_THRESHOLD
+from core.config import DB_PATH, RECOGNITION_THRESHOLD
+from core.hashing import hash_name, name_exists
 
 class FaceRecognizer:
     def __init__(self):
@@ -93,10 +94,18 @@ class FaceRecognizer:
         if len(self.known_embeddings) == 0:
             return "Unknown", 100
 
-        for name, db_emb in self.known_embeddings.items():
+        for hash_key, user_data in self.known_embeddings.items():
+            # Extract embedding and name from stored data
+            if isinstance(user_data, dict):
+                db_emb = user_data.get('emb')
+                name = user_data.get('name')
+            else:
+                # Legacy format support
+                db_emb = user_data
+                name = hash_key
+            
             # Support both single embedding and averaged lists
             if isinstance(db_emb, list):
-                # If you haven't averaged them yet in DB, take mean now
                 db_emb = torch.stack(db_emb).mean(dim=0)
                 
             dist = (embedding - db_emb).norm().item()
@@ -109,17 +118,19 @@ class FaceRecognizer:
         
         return identity, min_dist
 
-def register_face(self, name, samples):
+    def register_face(self, name, samples):
         """
         Saves the MEAN (Average) of the collected samples.
         PREVENTS overwriting if user already exists.
+        Stores as: hash(name) -> {'name': name, 'emb': mean_embedding}
         """
-        if not samples: return False
+        if not samples: 
+            return False
 
-        # User Existence ---
-        if name in self.known_embeddings:
+        # Check if name already exists BEFORE capturing
+        if name_exists(self.known_embeddings, name):
             print(f"\n[ERROR] Registration Failed: User '{name}' already exists in the database!")
-            print("[HINT] To overwrite, delete 'data/face_db.pt' or use a different name.\n")
+            print("[HINT] Please use a different name.\n")
             return False
         
         # Stack list into a tensor: shape (5, 512)
@@ -129,8 +140,14 @@ def register_face(self, name, samples):
             # Calculate Mean
             mean_embedding = torch.mean(stacked, dim=0, keepdim=True)
             
-            # Save to dictionary
-            self.known_embeddings[name] = mean_embedding
+            # Generate hash of name as key
+            name_hash = hash_name(name)
+            
+            # Save to dictionary with hash key and name + embedding in value
+            self.known_embeddings[name_hash] = {
+                'name': name,
+                'emb': mean_embedding
+            }
             
             # Save to disk
             self.save_db()
@@ -139,3 +156,9 @@ def register_face(self, name, samples):
         except Exception as e:
             print(f"Registration Error: {e}")
             return False
+
+    def check_name_exists(self, name):
+        """
+        Public method to check if a name exists before starting capture.
+        """
+        return name_exists(self.known_embeddings, name)
