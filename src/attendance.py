@@ -61,10 +61,14 @@ class AttendanceManager:
         
         # Ensure CSV file exists with headers
         if not os.path.exists(LOG_PATH):
-            pd.DataFrame(columns=CSV_COLUMNS).to_csv(LOG_PATH, index=False)
+            df = pd.DataFrame(columns=CSV_COLUMNS)
+            # Set all columns as string type
+            for col in CSV_COLUMNS:
+                df[col] = df[col].astype(str)
+            df.to_csv(LOG_PATH, index=False)
         
-        # Load existing data
-        df = pd.read_csv(LOG_PATH)
+        # Load existing data and ensure proper dtype
+        df = pd.read_csv(LOG_PATH, dtype=str)
         
         # Find today's entry for this user
         today_mask = (df['Name'] == name) & (df['Date'] == today_date)
