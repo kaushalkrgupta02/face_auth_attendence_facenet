@@ -109,18 +109,33 @@ class FaceRecognizer:
         
         return identity, min_dist
 
-    def register_face(self, name, samples):
+def register_face(self, name, samples):
         """
-        Saves the MEAN (Average) of the collected samples
+        Saves the MEAN (Average) of the collected samples.
+        PREVENTS overwriting if user already exists.
         """
         if not samples: return False
+
+        # User Existence ---
+        if name in self.known_embeddings:
+            print(f"\n[ERROR] Registration Failed: User '{name}' already exists in the database!")
+            print("[HINT] To overwrite, delete 'data/face_db.pt' or use a different name.\n")
+            return False
         
         # Stack list into a tensor: shape (5, 512)
-        stacked = torch.cat(samples, dim=0)
-        
-        # Calculate Mean
-        mean_embedding = torch.mean(stacked, dim=0, keepdim=True)
-        
-        self.known_embeddings[name] = mean_embedding
-        self.save_db()
-        return True
+        try:
+            stacked = torch.cat(samples, dim=0)
+            
+            # Calculate Mean
+            mean_embedding = torch.mean(stacked, dim=0, keepdim=True)
+            
+            # Save to dictionary
+            self.known_embeddings[name] = mean_embedding
+            
+            # Save to disk
+            self.save_db()
+            return True
+            
+        except Exception as e:
+            print(f"Registration Error: {e}")
+            return False
