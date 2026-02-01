@@ -1,0 +1,9 @@
+.env
+
+/data/
+__pycache__/
+*data
+*/data/
+
+attendance_log.csv
+face_db.pt

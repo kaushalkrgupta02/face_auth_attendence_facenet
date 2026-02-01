@@ -1,15 +1,12 @@
 import os
-
+# --- SILENCE TENSORFLOW WARNINGS ---
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import cv2
 import argparse
 import time
-
-import cv2
-import argparse
-import time
+from datetime import datetime  
 from src.detector import FaceDetector
 from src.recognizer import FaceRecognizer
 from src.attendance import AttendanceManager
@@ -75,31 +72,26 @@ def main():
                                 ret, temp_frame = cap.read()
                                 if not ret: break
                                 
-                                # Re-detect in new frame
                                 temp_faces = detector.detect(temp_frame)
                                 if temp_faces:
-                                    # Get largest face
                                     temp_data = list(temp_faces.values())[0]
                                     temp_box = temp_data['facial_area']
                                     
-                                    # Draw feedback
                                     cv2.rectangle(temp_frame, (temp_box[0], temp_box[1]), (temp_box[2], temp_box[3]), (0, 255, 0), 2)
                                     cv2.putText(temp_frame, f"Capturing {sample_count+1}/5", (50, 240), 
                                               cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
                                     cv2.imshow('Face Attendance', temp_frame)
-                                    cv2.waitKey(200) # Wait 200ms
+                                    cv2.waitKey(200) 
                                     
-                                    # Get Embedding
                                     emb = recognizer.get_embedding(temp_frame, temp_data)
                                     if emb is not None:
                                         samples.append(emb)
                                         sample_count += 1
                                         print(f"Captured {sample_count}/5")
                             
-                            # Save the accumulated samples
                             if recognizer.register_face(args.name, samples):
                                 print(f"User {args.name} Registered Successfully!")
-                                return # Exit program after success
+                                return 
 
                     # --- MODE: RUN (Attendance) ---
                     elif args.mode == 'run':
@@ -110,10 +102,28 @@ def main():
                             if name != "Unknown":
                                 color = (0, 255, 0) # Green
                                 status, action = manager.process_punch(name)
-                                display_text = f"{name}: {action}" if status == "Success" else f"{name}: Wait..."
-                                cv2.putText(frame, display_text, (box[0], box[1]-25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                                
+                                # --- DISPLAY DATE & TIME ---
+                                if status == "Success":
+                                    # Format: 01-Feb 14:30:05
+                                    time_str = datetime.now().strftime('%d-%b %H:%M:%S')
+                                    display_text = f"{name}: {action}"
+                                    sub_text = f"at {time_str}"
+                                    
+                                    # Draw Name & Action
+                                    cv2.putText(frame, display_text, (box[0], box[1]-30), 
+                                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                                    # Draw Date & Time just below it
+                                    cv2.putText(frame, sub_text, (box[0], box[1]-10), 
+                                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 255, 200), 1)
+                                                
+                                else:
+                                    # Wait message (Cooldown)
+                                    cv2.putText(frame, f"{name}: Wait...", (box[0], box[1]-20), 
+                                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
                             else:
-                                cv2.putText(frame, "Unknown", (box[0], box[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+                                cv2.putText(frame, "Unknown", (box[0], box[1]-10), 
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
                 # Draw Face Box
                 cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), color, 2)
